@@ -1,3 +1,4 @@
+#Day 2 AWS CloudFormation 30-Day Challenge
 AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS Challenge IaC - Day 2 - Add Public Read Policy to Existing Bucket
 
