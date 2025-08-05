@@ -1,1 +1,24 @@
-test
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS Challenge IaC - Day 3 - EC2 Instance with Keypair and Security Group
+
+Resources:
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH
+      VpcId: vpc-08be5c16ee4ea9910
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 223.25.57.9/32
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: Day3KeyPair
+      ImageId: ami-099ac2b6da48bfb6f
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      SubnetId: subnet-0f09c801b9f280a5e
