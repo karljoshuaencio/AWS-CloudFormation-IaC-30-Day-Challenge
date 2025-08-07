@@ -1,0 +1,37 @@
+#Day 4 AWS CloudFormation 30-Day Challenge
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS Challenge IaC - Day 4 - EC2 with User Data for Apache
+
+Resources:
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and HTTP
+      VpcId: vpc-08be5c16ee4ea9910
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 223.25.57.9/32
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: Day3KeyPair
+      ImageId: ami-099ac2b6da48bfb6f
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      SubnetId: subnet-0f09c801b9f280a5e
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          echo "<h1>Hello World from AWS CloudFormation IaC Day 4!</h1>" > /var/www/html/index.html
