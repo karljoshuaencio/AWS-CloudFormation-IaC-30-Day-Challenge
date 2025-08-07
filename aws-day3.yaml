@@ -1,3 +1,4 @@
+#Day 3 AWS CloudFormation 30-Day Challenge
 AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS Challenge IaC - Day 3 - EC2 Instance with Keypair and Security Group
 
