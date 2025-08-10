@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Day 7 Challenge - Create SNS Topic and Email Subscription
+
+Resources:
+  Day7SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: Day7Notification
+
+  Day7SNSEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref Day7SNSTopic
+      Protocol: email 
+      Endpoint: enciokarl@gmail.com
+  
+Outputs:
+  SNSTopicARN:
+    Value: !Ref Day7SNSTopic
+    Description: ARN of the SNS Topic
