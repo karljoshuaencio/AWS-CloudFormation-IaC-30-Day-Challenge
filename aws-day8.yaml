@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Day 8 Challenge IaC Create an SQS Queue and output its URL
+
+
+Resources:
+  Day8SQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: Day8SQSQueue
+Outputs:
+  SQSQueueURL:
+    Value: !Ref Day8SQSQueue
+    Description: URL of the SQS Queue
+
+
