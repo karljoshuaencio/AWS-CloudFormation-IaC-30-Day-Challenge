@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 10 Challenge - Lambda function that logs "Hello CloudFormation" with CloudWatch permissions.
+
+Resources:
+  Day10LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Hello10CFN
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              print("Hello CloudFormation")
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Hello CloudFormation')
+              }
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Day10LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaCloudWatchLogsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+
+Outputs:
+  LambdaFunctionName:
+    Value: !Ref Day10LambdaFunction
+    Description: Name of the Lambda function
