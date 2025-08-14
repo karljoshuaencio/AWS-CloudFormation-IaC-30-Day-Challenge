@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 11 Challenge - Lambda function triggered by SQS messages.
+
+Resources:
+  Day11Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: Day11Queue
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Day11LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaSQSPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt Day11Queue.Arn
+
+  Day11LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Hello11CFN
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              print("Event:", json.dumps(event))
+              for record in event['Records']:
+                  print("Message Body:", record['body'])
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Message processed')
+              }
+
+  LambdaSqsEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt Day11Queue.Arn
+      FunctionName: !Ref Day11LambdaFunction
+      BatchSize: 10
+      Enabled: true
+
+Outputs:
+  LambdaFunctionName:
+    Value: !Ref Day11LambdaFunction
+    Description: Lambda function name
+  QueueURL:
+    Value: !Ref Day11Queue
+    Description: URL of the SQS Queue
