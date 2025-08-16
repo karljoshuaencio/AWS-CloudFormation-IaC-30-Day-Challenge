@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 13 Challenge - EC2 instance with CloudWatch Alarm for CPU usage.
+
+Resources:
+  Day13EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0f5ee92e2d63afc18 
+      KeyName: !Ref EC2KeyPair
+      SecurityGroupIds:
+        - !Ref Day13InstanceSG
+      Tags:
+        - Key: Name
+          Value: Day13Instance
+
+  Day13InstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH for Day 13 instance
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  CPUUtilizationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: Day13-CPU-Alarm
+      AlarmDescription: "Alarm if CPU usage exceeds 70%"
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref Day13EC2Instance
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 70
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+Parameters:
+  EC2KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair for SSH access
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID to launch the instance into
+
+Outputs:
+  InstanceId:
+    Value: !Ref Day13EC2Instance
+    Description: Instance ID
+  AlarmName:
+    Value: !Ref CPUUtilizationAlarm
+    Description: CloudWatch Alarm Name
