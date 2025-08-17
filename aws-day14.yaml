@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Day 14 Challenge - CloudWatch Alarm for EC2 CPU usage with
+  Parameters and Outputs
+
+Parameters:
+  InstanceIdParam:
+    Type: String
+    Description: EC2 Instance ID to monitor
+  AlarmThresholdParam:
+    Type: Number
+    Default: 70
+    Description: CPU Utilization threshold percentage for the alarm
+  AlarmPeriodParam:
+    Type: Number
+    Default: 300
+    Description: Period (in seconds) for evaluating the metric
+  EvaluationPeriodsParam:
+    Type: Number
+    Default: 2
+    Description: Number of periods over which data is compared to the threshold
+
+Resources:
+  CPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub Alarm when EC2 CPU exceeds ${AlarmThresholdParam}%
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref InstanceIdParam
+      Statistic: Average
+      Period: !Ref AlarmPeriodParam
+      EvaluationPeriods: !Ref EvaluationPeriodsParam
+      Threshold: !Ref AlarmThresholdParam
+      ComparisonOperator: GreaterThanThreshold
+
+Outputs:
+  AlarmName:
+    Description: Name of the CloudWatch Alarm
+    Value: !Ref CPUAlarm
+  AlarmThreshold:
+    Description: The CPU threshold set for this alarm
+    Value: !Ref AlarmThresholdParam
+  MonitoredInstance:
+    Description: The EC2 Instance ID being monitored
+    Value: !Ref InstanceIdParam
