@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 18 Challenge - Create a Security Group that only allows HTTP (port 80)
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC where the security group will be created
+
+Resources: 
+  HttpOnlySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group allowing HTTP access
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: Day18HttpOnlySG
+
+Output:
+  SecurityGroupIds:
+    Description: The ID of the HTTP only security group
+    Value: !Ref HttpOnlySecurityGroup
