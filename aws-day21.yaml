@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 21 - Create RDS MySQL Database in VPC
+
+Parameters:
+  DBUsername:
+    Type: String
+    Default: admin
+    Description: Master username for RDS
+    NoEcho: true
+
+  DBPassword:
+    Type: String
+    Description: Master user password for RDS
+    NoEcho: true
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - !Ref MySubnet1
+        - !Ref MySubnet2
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow MySQL access
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+
+  MyRDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: mysql
+      EngineVersion: "8.0.35"
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      DBName: MyAppDB
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: true
+      BackupRetentionPeriod: 1
+      MultiAZ: false
+
+Outputs:
+  RDSInstanceEndpoint:
+    Description: Endpoint of the RDS database
+    Value: !GetAtt MyRDSInstance.Endpoint.Address
+
+  RDSInstancePort:
+    Description: Port of the RDS database
+    Value: !GetAtt MyRDSInstance.Endpoint.Port
