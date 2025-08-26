@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 23 - Use Conditions to create S3 bucket only in us-east-1
+
+Conditions:
+  CreateS3Bucket: !Equals [!Ref "AWS::Region", "us-east-1"]
+
+Resources:
+  MyOptionalBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateS3Bucket
+    Properties:
+      BucketName: !Sub "day23-conditional-bucket-${AWS::AccountId}"
+
+Outputs:
+  BucketName:
+    Condition: CreateS3Bucket
+    Description: s3d23 buckt
+    Value: !Ref MyOptionalBucket
