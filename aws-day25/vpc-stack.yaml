@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 25 - VPC Stack exporting outputs
+
+Resources:
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  MySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs ""]
+
+Outputs:
+  VpcIdExport:
+    Value: !Ref MyVPC
+    Export:
+      Name: VpcId-Export
+
+  SubnetIdExport:
+    Value: !Ref MySubnet
+    Export:
+      Name: SubnetId-Export
