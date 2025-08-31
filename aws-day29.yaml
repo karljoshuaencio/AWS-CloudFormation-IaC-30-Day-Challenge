@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 29 - Serverless App with API Gateway, Lambda, and DynamoDB
+
+Resources:
+  MyDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Day29Items
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  MyLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Day29Lambda
+      Handler: index.handler
+      Role: !GetAtt MyLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          dynamodb = boto3.resource('dynamodb')
+          table = dynamodb.Table('Day29Items')
+
+          def handler(event, context):
+              if event["httpMethod"] == "POST":
+                  body = json.loads(event["body"])
+                  table.put_item(Item={"id": body["id"], "value": body["value"]})
+                  return {"statusCode": 200, "body": json.dumps("Item added")}
+              elif event["httpMethod"] == "GET":
+                  item_id = event["queryStringParameters"]["id"]
+                  resp = table.get_item(Key={"id": item_id})
+                  return {"statusCode": 200, "body": json.dumps(resp.get("Item", {}))}
+              else:
+                  return {"statusCode": 400, "body": json.dumps("Bad request")}
+
+  MyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: Day29Api
+
+  MyApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt MyApiGateway.RootResourceId
+      PathPart: items
+      RestApiId: !Ref MyApiGateway
+
+  MyApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref MyApiGateway
+      ResourceId: !Ref MyApiResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyLambdaFunction.Arn}/invocations
+
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MyLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyApiGateway}/*/*
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${MyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/items
