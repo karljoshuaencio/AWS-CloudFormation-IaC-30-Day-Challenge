@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Day 28 - Add stack policies to protect critical resources
+
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: day28-protected-bucket
+
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0c02fb55956c7d316
+      KeyName: my-keypair
+
+StackPolicy:
+  Statement:
+    - Effect: Allow
+      Action: Update:*
+      Principal: "*"
+      Resource: "*"
+    - Effect: Deny
+      Action: Update:Delete
+      Principal: "*"
+      Resource: "*"
+      Condition:
+        StringEquals:
+          ResourceType: "AWS::S3::Bucket"
